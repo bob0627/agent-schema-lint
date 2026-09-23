@@ -1,0 +1,6 @@
+{
+  "properties": {
+    "x": { "type": "string" }
+  },
+  "required": ["x"]
+}

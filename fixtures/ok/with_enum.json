@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": ["user", "assistant", "tool"]
+    }
+  },
+  "required": ["role"]
+}

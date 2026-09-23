@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "age": { "type": "integer" }
+      },
+      "required": ["age"]
+    }
+  },
+  "required": ["profile"]
+}
