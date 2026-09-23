@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "color": { "type": "string", "enum": [] }
+  },
+  "required": ["color"]
+}

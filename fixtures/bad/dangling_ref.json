@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "item": { "$ref": "#/$defs/Item" }
+  },
+  "required": ["item"],
+  "$defs": {
+    "Other": { "type": "string" }
+  }
+}

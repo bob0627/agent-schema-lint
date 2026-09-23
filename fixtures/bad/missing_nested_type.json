@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "nested": { "properties": { "y": { "type": "number" } } }
+  },
+  "required": ["nested"]
+}
