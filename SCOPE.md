@@ -10,9 +10,9 @@ Ship a **runnable first cut**: MoonBit library + native CLI that lints JSON Sche
 
 - Parse JSON via `@json.parse`
 - Rule engine returning `Diagnostic { path, code, message, severity }`
-- Rules ASL001–ASL008 (see README)
-- CLI: `moon run cmd/main -- <file.json>`
-- ≥6 fixtures under `fixtures/{ok,bad}/`
+- Rules ASL001–ASL008 (see README); ASL009 (Warning) added in #6
+- CLI: `moon run cmd/main -- [--format text|json] <file.json>`, exit codes 0 / 1 / 2
+- ≥6 fixtures under `fixtures/{ok,warn,bad}/`, each exercised by `moon test`
 - `moon test` green
 - Apache-2.0 LICENSE + README
 
@@ -22,7 +22,7 @@ Ship a **runnable first cut**: MoonBit library + native CLI that lints JSON Sche
 - OpenAI / Anthropic / Gemini online schema endpoints
 - Auto-fix / rewrite
 - MCP server or editor LSP
-- WASM / web playground (optional stretch after D3)
+- WASM / web playground
 - Publishing to mooncakes (optional)
 
 ## Non-goals forever (this hackathon)
@@ -37,3 +37,14 @@ Ship a **runnable first cut**: MoonBit library + native CLI that lints JSON Sche
 - [x] Diagnostic + lint engine + 8 rules
 - [x] Fixtures + `moon test` green
 - [x] CLI reports errors and exits 1 on bad input
+
+## Success for final acceptance (2026-09-30)
+
+- [x] Every fixture is tested automatically with its expected code (#2, PR #3)
+- [x] Machine-readable `--format json` output + clear exit codes 0 / 1 / 2 (#4, PR #5)
+- [x] ASL009 strict-mode `required` warning with fixture + tests (#6, PR #7)
+- [x] CLI output order fixed for pipes (#12, PR #13)
+- [x] README: why, real demo output, rule examples, testing, roadmap (#11)
+- [x] `docs/RETROSPECTIVE.md` and `docs/ACCEPTANCE.md` (#11)
+- [x] Future work tracked as issues, not implemented: #8, #9, #10
+- [ ] Hosted CI (blocked: token has no `workflow` scope; local pre-commit hook instead)
