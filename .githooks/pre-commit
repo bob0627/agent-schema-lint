@@ -1,3 +1,6 @@
 #!/bin/sh
+set -e
 
 moon check
+scripts/gen_fixture_tests.sh --check
+moon test

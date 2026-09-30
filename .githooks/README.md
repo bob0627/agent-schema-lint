@@ -19,3 +19,9 @@ To use this pre-commit hook:
    ```
 
 3. The hook will automatically run when you execute `git commit`
+
+### What it checks
+
+- `moon check` — type check
+- `scripts/gen_fixture_tests.sh --check` — `fixtures_test.mbt` matches `fixtures/`
+- `moon test` — all tests green
