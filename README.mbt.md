@@ -52,7 +52,7 @@ if @agent-schema-lint.has_errors(diags) {
 println(@agent-schema-lint.diagnostics_to_json(diags)) // JSON array string
 ```
 
-## Rules (v0.1)
+## Rules
 
 | Code | Severity | Check |
 |------|----------|--------|
@@ -64,6 +64,7 @@ println(@agent-schema-lint.diagnostics_to_json(diags)) // JSON array string
 | ASL006 | Warning | Object type missing / non-false `additionalProperties` (strict-agent hint) |
 | ASL007 | Error | `required` entry not declared in `properties` |
 | ASL008 | Error | Local `#/$defs/…` or `#/definitions/…` `$ref` dangling |
+| ASL009 | Warning | Property declared in `properties` but not listed in `required` (strict modes require all) |
 
 ## Scope
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Regenerate fixtures_test.mbt from fixtures/ok/*.json and fixtures/bad/*.json.
+# Regenerate fixtures_test.mbt from fixtures/{ok,warn,bad}/*.json.
 #
 # MoonBit tests do not read files at runtime (keeps tests portable across all
 # backends), so every fixture is embedded verbatim as a `#|` multiline string.
@@ -11,7 +11,8 @@ set -eu
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 OUT="$ROOT/fixtures_test.mbt"
-MANIFEST="$ROOT/fixtures/bad/expected.txt"
+BAD_MANIFEST="$ROOT/fixtures/bad/expected.txt"
+WARN_MANIFEST="$ROOT/fixtures/warn/expected.txt"
 export LC_ALL=C
 
 emit_text() {
@@ -27,8 +28,8 @@ emit_text() {
 }
 
 expected_code() {
-  # $1 = basename; prints expected code from manifest or nothing
-  awk -v f="$1" '$0 !~ /^#/ && $1 == f { print $2; exit }' "$MANIFEST"
+  # $1 = manifest, $2 = basename; prints expected code or nothing
+  awk -v f="$2" '$0 !~ /^#/ && $1 == f { print $2; exit }' "$1"
 }
 
 generate() {
@@ -39,9 +40,10 @@ generate() {
   echo "fn fixture_has_code("
   echo "  diags : Array[@agent-schema-lint.Diagnostic],"
   echo "  code : String,"
+  echo "  severity : @agent-schema-lint.Severity,"
   echo ") -> Bool {"
   echo "  for d in diags {"
-  echo "    if d.code == code && d.severity == @agent-schema-lint.Error {"
+  echo "    if d.code == code && d.severity == severity {"
   echo "      return true"
   echo "    }"
   echo "  }"
@@ -57,9 +59,25 @@ generate() {
     echo "  assert_false(@agent-schema-lint.has_errors(diags))"
     echo "}"
   done
+  for f in "$ROOT"/fixtures/warn/*.json; do
+    name=$(basename "$f")
+    code=$(expected_code "$WARN_MANIFEST" "$name")
+    if [ -z "$code" ]; then
+      echo "error: fixtures/warn/$name has no entry in fixtures/warn/expected.txt" >&2
+      exit 1
+    fi
+    echo
+    echo "///|"
+    echo "test \"fixture warn/$name warns $code without errors\" {"
+    emit_text "$f"
+    echo "  let diags = @agent-schema-lint.lint(text)"
+    echo "  assert_false(@agent-schema-lint.has_errors(diags))"
+    echo "  assert_true(fixture_has_code(diags, \"$code\", @agent-schema-lint.Warning))"
+    echo "}"
+  done
   for f in "$ROOT"/fixtures/bad/*.json; do
     name=$(basename "$f")
-    code=$(expected_code "$name")
+    code=$(expected_code "$BAD_MANIFEST" "$name")
     if [ -z "$code" ]; then
       echo "error: fixtures/bad/$name has no entry in fixtures/bad/expected.txt" >&2
       exit 1
@@ -70,7 +88,7 @@ generate() {
     emit_text "$f"
     echo "  let diags = @agent-schema-lint.lint(text)"
     echo "  assert_true(@agent-schema-lint.has_errors(diags))"
-    echo "  assert_true(fixture_has_code(diags, \"$code\"))"
+    echo "  assert_true(fixture_has_code(diags, \"$code\", @agent-schema-lint.Error))"
     echo "}"
   done
 }

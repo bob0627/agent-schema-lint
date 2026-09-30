@@ -85,6 +85,7 @@ fn walk_schema(
   check_empty_enum(node, path, diags)
   check_additional_properties(node, path, diags)
   check_required_unknown(node, path, diags)
+  check_all_properties_required(node, path, diags)
   check_ref(node, path, defs, diags)
 
   // Recurse into properties
@@ -327,6 +328,39 @@ fn check_required_unknown(
       })
     None => ()
   }
+}
+
+///|
+/// ASL009: strict structured-output modes require every declared property to
+/// be listed in `required` (optional fields should be nullable instead).
+fn check_all_properties_required(
+  node : Map[String, Json],
+  path : String,
+  diags : Array[Diagnostic],
+) -> Unit {
+  guard node.get("properties") is Some(Object(props)) else { return }
+  let required : Map[String, Bool] = Map([])
+  match node.get("required") {
+    Some(Array(arr)) =>
+      for item in arr {
+        if item is String(name) {
+          required.set(name, true)
+        }
+      }
+    None => ()
+    // Non-array `required` is already an ASL007 error.
+    Some(_) => return
+  }
+  props.each(fn(name, _) {
+    if !required.contains(name) {
+      diags.push({
+        path: "\{path}.properties.\{name}",
+        code: "ASL009",
+        message: "property \"\{name}\" is not listed in required; strict structured-output modes require every property (make it nullable instead of optional)",
+        severity: Warning,
+      })
+    }
+  })
 }
 
 ///|

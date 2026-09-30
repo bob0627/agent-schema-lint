@@ -1,0 +1,4 @@
+# Expected warning code for each warn fixture: <file> <ASL code>
+# Each fixture must produce NO Error diagnostics and at least one Warning with this code.
+open_object.json ASL006
+optional_property.json ASL009

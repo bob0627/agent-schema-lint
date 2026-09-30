@@ -1,6 +1,8 @@
 # Fixtures
 
 - `ok/*.json` — schemas that must lint with **no Error** diagnostics (warnings allowed).
+- `warn/*.json` — schemas with **no Error** but a specific expected **Warning**; the
+  expected code per file is listed in [`warn/expected.txt`](./warn/expected.txt).
 - `bad/*.json` — schemas that must produce at least one Error; the expected ASL code
   for each file is listed in [`bad/expected.txt`](./bad/expected.txt).
 
@@ -14,4 +16,4 @@ scripts/gen_fixture_tests.sh --check  # verify it is up to date (used by .githoo
 moon test
 ```
 
-A new bad fixture without an `expected.txt` entry makes the generator fail on purpose.
+A new bad or warn fixture without an `expected.txt` entry makes the generator fail on purpose.
