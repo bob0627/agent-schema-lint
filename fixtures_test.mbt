@@ -5,9 +5,10 @@
 fn fixture_has_code(
   diags : Array[@agent-schema-lint.Diagnostic],
   code : String,
+  severity : @agent-schema-lint.Severity,
 ) -> Bool {
   for d in diags {
-    if d.code == code && d.severity == @agent-schema-lint.Error {
+    if d.code == code && d.severity == severity {
       return true
     }
   }
@@ -88,6 +89,38 @@ test "fixture ok/with_enum.json has no errors" {
 }
 
 ///|
+test "fixture warn/open_object.json warns ASL006 without errors" {
+  let text =
+    #|{
+    #|  "type": "object",
+    #|  "properties": {
+    #|    "note": { "type": "string" }
+    #|  },
+    #|  "required": ["note"]
+    #|}
+  let diags = @agent-schema-lint.lint(text)
+  assert_false(@agent-schema-lint.has_errors(diags))
+  assert_true(fixture_has_code(diags, "ASL006", @agent-schema-lint.Warning))
+}
+
+///|
+test "fixture warn/optional_property.json warns ASL009 without errors" {
+  let text =
+    #|{
+    #|  "type": "object",
+    #|  "additionalProperties": false,
+    #|  "properties": {
+    #|    "query": { "type": "string" },
+    #|    "limit": { "type": "integer" }
+    #|  },
+    #|  "required": ["query"]
+    #|}
+  let diags = @agent-schema-lint.lint(text)
+  assert_false(@agent-schema-lint.has_errors(diags))
+  assert_true(fixture_has_code(diags, "ASL009", @agent-schema-lint.Warning))
+}
+
+///|
 test "fixture bad/dangling_ref.json reports ASL008" {
   let text =
     #|{
@@ -103,7 +136,7 @@ test "fixture bad/dangling_ref.json reports ASL008" {
     #|}
   let diags = @agent-schema-lint.lint(text)
   assert_true(@agent-schema-lint.has_errors(diags))
-  assert_true(fixture_has_code(diags, "ASL008"))
+  assert_true(fixture_has_code(diags, "ASL008", @agent-schema-lint.Error))
 }
 
 ///|
@@ -119,7 +152,7 @@ test "fixture bad/empty_enum.json reports ASL005" {
     #|}
   let diags = @agent-schema-lint.lint(text)
   assert_true(@agent-schema-lint.has_errors(diags))
-  assert_true(fixture_has_code(diags, "ASL005"))
+  assert_true(fixture_has_code(diags, "ASL005", @agent-schema-lint.Error))
 }
 
 ///|
@@ -132,7 +165,7 @@ test "fixture bad/empty_props.json reports ASL004" {
     #|}
   let diags = @agent-schema-lint.lint(text)
   assert_true(@agent-schema-lint.has_errors(diags))
-  assert_true(fixture_has_code(diags, "ASL004"))
+  assert_true(fixture_has_code(diags, "ASL004", @agent-schema-lint.Error))
 }
 
 ///|
@@ -148,7 +181,7 @@ test "fixture bad/missing_nested_type.json reports ASL003" {
     #|}
   let diags = @agent-schema-lint.lint(text)
   assert_true(@agent-schema-lint.has_errors(diags))
-  assert_true(fixture_has_code(diags, "ASL003"))
+  assert_true(fixture_has_code(diags, "ASL003", @agent-schema-lint.Error))
 }
 
 ///|
@@ -162,7 +195,7 @@ test "fixture bad/missing_root_type.json reports ASL002" {
     #|}
   let diags = @agent-schema-lint.lint(text)
   assert_true(@agent-schema-lint.has_errors(diags))
-  assert_true(fixture_has_code(diags, "ASL002"))
+  assert_true(fixture_has_code(diags, "ASL002", @agent-schema-lint.Error))
 }
 
 ///|
@@ -178,7 +211,7 @@ test "fixture bad/required_unknown.json reports ASL007" {
     #|}
   let diags = @agent-schema-lint.lint(text)
   assert_true(@agent-schema-lint.has_errors(diags))
-  assert_true(fixture_has_code(diags, "ASL007"))
+  assert_true(fixture_has_code(diags, "ASL007", @agent-schema-lint.Error))
 }
 
 ///|
@@ -189,5 +222,5 @@ test "fixture bad/root_string.json reports ASL002" {
     #|}
   let diags = @agent-schema-lint.lint(text)
   assert_true(@agent-schema-lint.has_errors(diags))
-  assert_true(fixture_has_code(diags, "ASL002"))
+  assert_true(fixture_has_code(diags, "ASL002", @agent-schema-lint.Error))
 }
