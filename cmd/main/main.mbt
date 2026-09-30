@@ -4,6 +4,13 @@
 extern "c" fn c_exit(code : Int) = "exit"
 
 ///|
+/// All output goes through async stdio (unbuffered, in call order) so that
+/// findings on stdout and the summary on stderr interleave correctly in pipes.
+async fn out(line : String) -> Unit {
+  @stdio.stdout.write("\{line}\n")
+}
+
+///|
 fn cli() -> @argparse.Command {
   @argparse.Command(
     "agent-schema-lint",
@@ -67,15 +74,15 @@ async fn main {
   let diags = @lib.lint(text)
   let failed = @lib.has_errors(diags)
   if format == "json" {
-    println(@lib.diagnostics_to_json(diags))
+    out(@lib.diagnostics_to_json(diags))
   } else if diags.is_empty() {
-    println("ok: \{file}")
+    out("ok: \{file}")
   } else {
     for d in diags {
-      println(d.format())
+      out(d.format())
     }
     if !failed {
-      println("ok with warnings: \{file}")
+      out("ok with warnings: \{file}")
     }
   }
   if failed {
