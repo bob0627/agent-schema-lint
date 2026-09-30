@@ -27,8 +27,8 @@ Ship a **runnable first cut**: MoonBit library + native CLI that lints JSON Sche
 
 ## Non-goals forever (this hackathon)
 
-- Baidu map / farm-style demos
-- Hosting a second product runtime beside GOSIM
+- Running LLMs or calling provider APIs
+- Becoming a general-purpose JSON Schema validator
 
 ## Success for D0/D1
 
