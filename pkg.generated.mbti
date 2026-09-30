@@ -2,6 +2,8 @@
 package "bob/agent-schema-lint"
 
 // Values
+pub fn diagnostics_to_json(ArrayView[Diagnostic]) -> String
+
 pub fn format_diagnostics(ArrayView[Diagnostic]) -> String
 
 pub fn has_errors(ArrayView[Diagnostic]) -> Bool
@@ -20,13 +22,18 @@ pub(all) struct Diagnostic {
 pub fn Diagnostic::equal(Self, Self) -> Bool
 pub fn Diagnostic::format(Self) -> String
 pub fn Diagnostic::not_equal(Self, Self) -> Bool
+pub fn Diagnostic::to_json(Self) -> Json
+pub impl ToJson for Diagnostic
 
 pub(all) enum Severity {
   Error
   Warning
 } derive(Eq)
 pub fn Severity::equal(Self, Self) -> Bool
+pub fn Severity::label(Self) -> String
 pub fn Severity::not_equal(Self, Self) -> Bool
+pub fn Severity::to_json(Self) -> Json
+pub impl ToJson for Severity
 
 // Type aliases
 

@@ -19,13 +19,28 @@ moon test
 ## Usage
 
 ```bash
-# Lint a schema file (exit 1 if any Error-severity finding)
-moon run cmd/main -- path/to/schema.json
+moon run cmd/main -- [--format text|json] <schema.json>
 
 # Examples
 moon run cmd/main -- fixtures/ok/minimal.json
 moon run cmd/main -- fixtures/bad/empty_props.json
+moon run cmd/main -- --format json fixtures/bad/required_unknown.json
 ```
+
+- `--format text` (default): one line per finding, `severity[CODE] json.path: message`.
+- `--format json`: a single JSON array on stdout, one object per finding with
+  `path`, `code`, `message`, `severity` (`"error"` / `"warning"`); `[]` when clean.
+  Intended for CI tools and editors.
+
+Exit codes:
+
+| Code | Meaning |
+|------|---------|
+| 0 | No Error findings (warnings allowed) |
+| 1 | At least one Error finding |
+| 2 | Usage error (missing file, unknown `--format`) or file cannot be read |
+
+In text mode the `lint failed: …` summary goes to stderr, so stdout only carries findings.
 
 Library API (pure):
 
@@ -34,6 +49,7 @@ let diags = @agent-schema-lint.lint(schema_text)
 if @agent-schema-lint.has_errors(diags) {
   // fail CI
 }
+println(@agent-schema-lint.diagnostics_to_json(diags)) // JSON array string
 ```
 
 ## Rules (v0.1)

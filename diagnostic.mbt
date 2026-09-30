@@ -21,12 +21,46 @@ pub(all) struct Diagnostic {
 pub extend Diagnostic with Eq::{equal, not_equal}
 
 ///|
-pub fn Diagnostic::format(self : Diagnostic) -> String {
-  let sev = match self.severity {
+/// Lowercase label used in both text and JSON output: `"error"` / `"warning"`.
+pub fn Severity::label(self : Severity) -> String {
+  match self {
     Error => "error"
     Warning => "warning"
   }
-  "\{sev}[\{self.code}] \{self.path}: \{self.message}"
+}
+
+///|
+pub impl ToJson for Severity with fn to_json(self) {
+  Json::string(self.label())
+}
+
+///|
+pub extend Severity with ToJson::{to_json}
+
+///|
+pub fn Diagnostic::format(self : Diagnostic) -> String {
+  "\{self.severity.label()}[\{self.code}] \{self.path}: \{self.message}"
+}
+
+///|
+/// JSON object `{"path", "code", "message", "severity"}` (keys in that order).
+pub impl ToJson for Diagnostic with fn to_json(self) {
+  {
+    "path": self.path.to_json(),
+    "code": self.code.to_json(),
+    "message": self.message.to_json(),
+    "severity": self.severity.to_json(),
+  }
+}
+
+///|
+pub extend Diagnostic with ToJson::{to_json}
+
+///|
+/// Render diagnostics as a compact JSON array, e.g. for CI tools.
+/// An empty input yields `[]`.
+pub fn diagnostics_to_json(diags : ArrayView[Diagnostic]) -> String {
+  diags.to_json().stringify()
 }
 
 ///|
