@@ -7,11 +7,11 @@ version = "0.1.0"
 
 readme = "README.mbt.md"
 
-repository = ""
+repository = "https://github.com/bob0627/agent-schema-lint"
 
 license = "Apache-2.0"
 
-keywords = ["json-schema", "lint", "agent", "cli"]
+keywords = [ "json-schema", "lint", "agent", "cli" ]
 
 preferred_target = "native"
 

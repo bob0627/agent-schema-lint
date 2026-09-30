@@ -1,0 +1,11 @@
+# Expected lint code for each bad fixture: <file> <ASL code>
+# Each fixture must produce at least one Error diagnostic with this code.
+# Codes were derived from the CLI output (`moon run cmd/main -- fixtures/bad/<file>`)
+# and reviewed by hand against the rule table in README.mbt.md.
+dangling_ref.json ASL008
+empty_enum.json ASL005
+empty_props.json ASL004
+missing_nested_type.json ASL003
+missing_root_type.json ASL002
+required_unknown.json ASL007
+root_string.json ASL002
