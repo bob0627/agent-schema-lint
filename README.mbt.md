@@ -29,7 +29,7 @@ moon run cmd/main -- fixtures/bad/empty_props.json
 
 Library API (pure):
 
-```mbt
+```mbt nocheck
 let diags = @agent-schema-lint.lint(schema_text)
 if @agent-schema-lint.has_errors(diags) {
   // fail CI

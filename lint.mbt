@@ -3,18 +3,14 @@
 /// Returns diagnostics (possibly empty). Parse failures become ASL001 errors.
 pub fn lint(schema_text : StringView) -> Array[Diagnostic] {
   let diags : Array[Diagnostic] = []
-  let parsed = try {
-    @json.parse(schema_text)
-  } catch {
+  let parsed = @json.parse(schema_text) catch {
     err => {
-      diags.push(
-        {
-          path: "$",
-          code: "ASL001",
-          message: "invalid JSON: \{err}",
-          severity: Error,
-        },
-      )
+      diags.push({
+        path: "$",
+        code: "ASL001",
+        message: "invalid JSON: \{err}",
+        severity: Error,
+      })
       return diags
     }
   }
@@ -25,14 +21,12 @@ pub fn lint(schema_text : StringView) -> Array[Diagnostic] {
       walk_schema(root, "$", defs, diags, is_root=true)
     }
     _ =>
-      diags.push(
-        {
-          path: "$",
-          code: "ASL001",
-          message: "schema root must be a JSON object",
-          severity: Error,
-        },
-      )
+      diags.push({
+        path: "$",
+        code: "ASL001",
+        message: "schema root must be a JSON object",
+        severity: Error,
+      })
   }
   diags
 }
@@ -41,24 +35,20 @@ pub fn lint(schema_text : StringView) -> Array[Diagnostic] {
 fn lint_root(root : Map[String, Json], diags : Array[Diagnostic]) -> Unit {
   match root.get("type") {
     None =>
-      diags.push(
-        {
-          path: "$",
-          code: "ASL002",
-          message: "root schema should declare type: \"object\" for agent structured output",
-          severity: Error,
-        },
-      )
+      diags.push({
+        path: "$",
+        code: "ASL002",
+        message: "root schema should declare type: \"object\" for agent structured output",
+        severity: Error,
+      })
     Some(String("object")) => ()
     Some(other) =>
-      diags.push(
-        {
-          path: "$.type",
-          code: "ASL002",
-          message: "root type must be \"object\", got \{summarize_json(other)}",
-          severity: Error,
-        },
-      )
+      diags.push({
+        path: "$.type",
+        code: "ASL002",
+        message: "root type must be \"object\", got \{summarize_json(other)}",
+        severity: Error,
+      })
   }
 }
 
@@ -77,8 +67,7 @@ fn collect_defs_from_key(
   defs : Map[String, Bool],
 ) -> Unit {
   match root.get(key) {
-    Some(Object(m)) =>
-      m.each(fn(name, _) { defs.set(name, true) })
+    Some(Object(m)) => m.each(fn(name, _) { defs.set(name, true) })
     _ => ()
   }
 }
@@ -89,7 +78,7 @@ fn walk_schema(
   path : String,
   defs : Map[String, Bool],
   diags : Array[Diagnostic],
-  is_root~ : Bool = false,
+  is_root? : Bool = false,
 ) -> Unit {
   check_missing_type(node, path, diags, is_root~)
   check_empty_properties(node, path, diags)
@@ -190,14 +179,12 @@ fn check_missing_type(
     node.contains("required") ||
     node.contains("additionalProperties")
   if schema_like {
-    diags.push(
-      {
-        path: path,
-        code: "ASL003",
-        message: "schema object is missing \"type\" (and is not a $ref)",
-        severity: Error,
-      },
-    )
+    diags.push({
+      path,
+      code: "ASL003",
+      message: "schema object is missing \"type\" (and is not a $ref)",
+      severity: Error,
+    })
   }
 }
 
@@ -210,24 +197,20 @@ fn check_empty_properties(
   match node.get("properties") {
     Some(Object(props)) =>
       if props.is_empty() {
-        diags.push(
-          {
-            path: "\{path}.properties",
-            code: "ASL004",
-            message: "properties must not be an empty object",
-            severity: Error,
-          },
-        )
-      }
-    Some(_) =>
-      diags.push(
-        {
+        diags.push({
           path: "\{path}.properties",
           code: "ASL004",
-          message: "properties must be an object",
+          message: "properties must not be an empty object",
           severity: Error,
-        },
-      )
+        })
+      }
+    Some(_) =>
+      diags.push({
+        path: "\{path}.properties",
+        code: "ASL004",
+        message: "properties must be an object",
+        severity: Error,
+      })
     None => ()
   }
 }
@@ -241,24 +224,20 @@ fn check_empty_enum(
   match node.get("enum") {
     Some(Array(arr)) =>
       if arr.is_empty() {
-        diags.push(
-          {
-            path: "\{path}.enum",
-            code: "ASL005",
-            message: "enum must not be empty",
-            severity: Error,
-          },
-        )
-      }
-    Some(_) =>
-      diags.push(
-        {
+        diags.push({
           path: "\{path}.enum",
           code: "ASL005",
-          message: "enum must be an array",
+          message: "enum must not be empty",
           severity: Error,
-        },
-      )
+        })
+      }
+    Some(_) =>
+      diags.push({
+        path: "\{path}.enum",
+        code: "ASL005",
+        message: "enum must be an array",
+        severity: Error,
+      })
     None => ()
   }
 }
@@ -279,33 +258,27 @@ fn check_additional_properties(
   match node.get("additionalProperties") {
     Some(False) => ()
     Some(True) =>
-      diags.push(
-        {
-          path: "\{path}.additionalProperties",
-          code: "ASL006",
-          message: "additionalProperties: true is discouraged for strict agent schemas; prefer false",
-          severity: Warning,
-        },
-      )
+      diags.push({
+        path: "\{path}.additionalProperties",
+        code: "ASL006",
+        message: "additionalProperties: true is discouraged for strict agent schemas; prefer false",
+        severity: Warning,
+      })
     Some(_) =>
       // object schema as additionalProperties — allowed but warn for strict packs
-      diags.push(
-        {
-          path: "\{path}.additionalProperties",
-          code: "ASL006",
-          message: "non-false additionalProperties may break strict structured-output providers",
-          severity: Warning,
-        },
-      )
+      diags.push({
+        path: "\{path}.additionalProperties",
+        code: "ASL006",
+        message: "non-false additionalProperties may break strict structured-output providers",
+        severity: Warning,
+      })
     None =>
-      diags.push(
-        {
-          path: path,
-          code: "ASL006",
-          message: "object type should set additionalProperties: false for strict agent schemas",
-          severity: Warning,
-        },
-      )
+      diags.push({
+        path,
+        code: "ASL006",
+        message: "object type should set additionalProperties: false for strict agent schemas",
+        severity: Warning,
+      })
   }
 }
 
@@ -327,37 +300,31 @@ fn check_required_unknown(
         match item {
           String(name) =>
             if !props.contains(name) {
-              diags.push(
-                {
-                  path: "\{path}.required[\{i}]",
-                  code: "ASL007",
-                  message: "required field \"\{name}\" is not declared in properties",
-                  severity: Error,
-                },
-              )
-            }
-          _ =>
-            diags.push(
-              {
+              diags.push({
                 path: "\{path}.required[\{i}]",
                 code: "ASL007",
-                message: "required entries must be strings",
+                message: "required field \"\{name}\" is not declared in properties",
                 severity: Error,
-              },
-            )
+              })
+            }
+          _ =>
+            diags.push({
+              path: "\{path}.required[\{i}]",
+              code: "ASL007",
+              message: "required entries must be strings",
+              severity: Error,
+            })
         }
         i = i + 1
       }
     }
     Some(_) =>
-      diags.push(
-        {
-          path: "\{path}.required",
-          code: "ASL007",
-          message: "required must be an array of strings",
-          severity: Error,
-        },
-      )
+      diags.push({
+        path: "\{path}.required",
+        code: "ASL007",
+        message: "required must be an array of strings",
+        severity: Error,
+      })
     None => ()
   }
 }
@@ -370,31 +337,26 @@ fn check_ref(
   diags : Array[Diagnostic],
 ) -> Unit {
   match node.get("$ref") {
-    Some(String(ref_str)) => {
+    Some(String(ref_str)) =>
       match local_def_name(ref_str) {
         Some(name) =>
           if !defs.contains(name) {
-            diags.push(
-              {
-                path: "\{path}.$ref",
-                code: "ASL008",
-                message: "dangling local $ref \"\{ref_str}\" (no matching $defs/definitions entry)",
-                severity: Error,
-              },
-            )
+            diags.push({
+              path: "\{path}.$ref",
+              code: "ASL008",
+              message: "dangling local $ref \"\{ref_str}\" (no matching $defs/definitions entry)",
+              severity: Error,
+            })
           }
         None => ()
       }
-    }
     Some(_) =>
-      diags.push(
-        {
-          path: "\{path}.$ref",
-          code: "ASL008",
-          message: "$ref must be a string",
-          severity: Error,
-        },
-      )
+      diags.push({
+        path: "\{path}.$ref",
+        code: "ASL008",
+        message: "$ref must be a string",
+        severity: Error,
+      })
     None => ()
   }
 }

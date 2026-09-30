@@ -6,7 +6,7 @@ pub(all) enum Severity {
 } derive(Eq)
 
 ///|
-pub extend Severity with Eq::{ equal, not_equal }
+pub extend Severity with Eq::{equal, not_equal}
 
 ///|
 /// A single lint diagnostic.
@@ -18,7 +18,7 @@ pub(all) struct Diagnostic {
 } derive(Eq)
 
 ///|
-pub extend Diagnostic with Eq::{ equal, not_equal }
+pub extend Diagnostic with Eq::{equal, not_equal}
 
 ///|
 pub fn Diagnostic::format(self : Diagnostic) -> String {
