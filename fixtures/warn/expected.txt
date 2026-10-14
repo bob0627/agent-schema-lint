@@ -2,3 +2,4 @@
 # Each fixture must produce NO Error diagnostics and at least one Warning with this code.
 open_object.json ASL006
 optional_property.json ASL009
+no_arg_tool.json ASL004

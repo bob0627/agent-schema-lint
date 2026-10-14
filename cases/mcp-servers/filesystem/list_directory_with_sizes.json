@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string"
+    },
+    "sortBy": {
+      "default": "name",
+      "description": "Sort entries by name or size",
+      "type": "string",
+      "enum": [
+        "name",
+        "size"
+      ]
+    }
+  },
+  "required": [
+    "path"
+  ]
+}

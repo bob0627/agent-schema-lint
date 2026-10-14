@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Name of the key to press or a character to generate, such as `ArrowLeft` or `a`"
+    }
+  },
+  "required": [
+    "key"
+  ],
+  "additionalProperties": false
+}

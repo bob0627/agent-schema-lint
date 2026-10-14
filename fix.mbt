@@ -94,10 +94,7 @@ fn fix_node(
       kimi_unsupported.filter(fn(k) {
         k != "prefixItems" && k != "$schema" && k != "$id"
       })
-    Qwen =>
-      qwen_unsupported.filter(fn(k) {
-        k != "contains" && k != "patternProperties" && k != "propertyNames"
-      })
+    Qwen => qwen_unsupported.filter(fn(k) { k != "contains" })
     _ => []
   }
   for key in strip {
@@ -112,6 +109,7 @@ fn fix_node(
         move_to_description(node, path, "format", changes)
       _ => ()
     }
+    drop_null_branches(node, path, changes)
     if node.get("oneOf") is Some(arr) && !node.contains("anyOf") {
       node.remove("oneOf")
       node.set("anyOf", arr)
@@ -230,4 +228,58 @@ pub fn ai_fix_is_better(
   let (be, bw) = count_findings(before)
   let (ae, aw) = count_findings(after)
   ae <= be && aw <= bw && (ae < be || aw < bw)
+}
+
+///|
+/// DeepSeek strict mode has no `null` type. Pydantic-style optionals
+/// (`anyOf: [{...}, {"type": "null"}]`) lose the null branch; a single
+/// remaining branch is inlined. Nullability is noted in `description`.
+fn drop_null_branches(
+  node : Map[String, Json],
+  path : String,
+  changes : Array[String],
+) -> Unit {
+  if node.get("type") is Some(Array(types)) {
+    let rest = types.filter(fn(t) { !(t is String("null")) })
+    if rest is [only] && rest.length() < types.length() {
+      node.set("type", only)
+      changes.push(
+        "\{path}.type: 去掉 \"null\"（DeepSeek strict 不支持 null 类型）",
+      )
+    }
+  }
+  if node.get("type") is Some(Array(types)) && !node.contains("anyOf") {
+    node.remove("type")
+    node.set(
+      "anyOf",
+      Json::array(types.map(fn(t) { Json::object(Map([("type", t)])) })),
+    )
+    changes.push(
+      "\{path}.type: 类型数组改写为 anyOf（DeepSeek strict 只支持单一类型）",
+    )
+  }
+  guard node.get("anyOf") is Some(Array(branches)) else { return }
+  let kept = branches.filter(fn(b) {
+    !(b is Object({ "type": String("null"), .. }))
+  })
+  if kept.length() == branches.length() || kept.is_empty() {
+    return
+  }
+  node.remove("anyOf")
+  if kept is [Object(only)] {
+    only.each(fn(k, v) { if !node.contains(k) { node.set(k, v) } })
+  } else {
+    node.set("anyOf", Json::array(kept))
+  }
+  if node.get("default") is Some(Null) {
+    node.remove("default")
+  }
+  let desc = match node.get("description") {
+    Some(String(d)) => "\{d}（可为空：不需要时传空字符串或 0）"
+    _ => "（可为空：不需要时传空字符串或 0）"
+  }
+  node.set("description", Json::string(desc))
+  changes.push(
+    "\{path}.anyOf: 去掉 null 分支（DeepSeek strict 不支持 null 类型）",
+  )
 }
