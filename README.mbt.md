@@ -1,8 +1,34 @@
 # agent-schema-lint
 
+**大模型工具 schema 的"体检 + 自动修复"工具，专门适配国产大模型。**
+
+同一份 Function Calling / MCP 工具定义，在 OpenAI 上能用，换到 DeepSeek、Kimi、通义千问、智谱 GLM 时经常直接报 400，或者参数被模型填错。`agent-schema-lint` 在发布前就把这些问题找出来，并自动修好。
+
+- 🔍 **国产模型专属规则**：`--profile deepseek | kimi | qwen | glm`，每条规则附官方文档依据（[docs/PROFILES.md](docs/PROFILES.md)）
+- 🛠 **自动修复**：`--fix` 离线确定性修复；`--ai` 调用任意 OpenAI 兼容模型（默认 DeepSeek）补写参数说明、改结构，**重新 lint 后只采用更好的结果**（[docs/FIX.md](docs/FIX.md)）
+- 📊 **真实案例**：8 个热门开源 MCP Server 的 77 个工具里，72 个过不了 DeepSeek strict 模式；`--fix` 后只剩 1 个（[docs/CASES.md](docs/CASES.md)）
+- ⚙️ 用 MoonBit 编写，原生二进制、离线运行，退出码和 `--format json` 便于接入 CI
+
+### 30 秒上手
+
+```bash
+export PATH="$HOME/.moon/bin:$PATH"
+git clone https://github.com/bob0627/agent-schema-lint && cd agent-schema-lint
+moon run cmd/main -- --profile deepseek cases/mcp-servers/git/git_branch.json        # 体检
+moon run cmd/main -- --fix --profile deepseek cases/mcp-servers/git/git_branch.json  # 修复
+ASL_AI_API_KEY=sk-... moon run cmd/main -- --fix --ai --profile kimi your_tool.json  # AI 修复
+```
+
+参与贡献见 [CONTRIBUTING.md](CONTRIBUTING.md)，路线图见 [ROADMAP.md](ROADMAP.md)，更新日志见 [CHANGELOG.md](CHANGELOG.md)。
+
+---
+
+## English
+
+
 Offline **JSON Schema subset linter** for LLM structured-output / Agent tool schemas.
 
-Built with [MoonBit](https://www.moonbitlang.com/). No network calls, no model calls — static rules only.
+Built with [MoonBit](https://www.moonbitlang.com/). Linting is fully offline; the optional `--fix --ai` mode calls an OpenAI-compatible model you configure.
 
 ## Why
 
