@@ -1,0 +1,1 @@
+{"type":"object","properties":{"q":{"type":"string","minLength":1,"title":"Q"},"limit":{"type":"integer","multipleOf":1}},"required":["q"]}
