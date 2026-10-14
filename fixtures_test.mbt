@@ -89,6 +89,19 @@ test "fixture ok/with_enum.json has no errors" {
 }
 
 ///|
+test "fixture warn/no_arg_tool.json warns ASL004 without errors" {
+  let text =
+    #|{
+    #|  "type": "object",
+    #|  "additionalProperties": false,
+    #|  "properties": {}
+    #|}
+  let diags = @agent-schema-lint.lint(text)
+  assert_false(@agent-schema-lint.has_errors(diags))
+  assert_true(fixture_has_code(diags, "ASL004", @agent-schema-lint.Warning))
+}
+
+///|
 test "fixture warn/open_object.json warns ASL006 without errors" {
   let text =
     #|{
@@ -161,7 +174,14 @@ test "fixture bad/empty_props.json reports ASL004" {
     #|{
     #|  "type": "object",
     #|  "additionalProperties": false,
-    #|  "properties": {}
+    #|  "properties": {
+    #|    "options": {
+    #|      "type": "object",
+    #|      "additionalProperties": false,
+    #|      "properties": {}
+    #|    }
+    #|  },
+    #|  "required": ["options"]
     #|}
   let diags = @agent-schema-lint.lint(text)
   assert_true(@agent-schema-lint.has_errors(diags))

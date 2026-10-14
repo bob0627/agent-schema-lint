@@ -1,0 +1,87 @@
+# 真实案例报告：8 个热门开源 MCP Server、77 个工具 schema
+
+> 采集日期：2026-10-14（北京时间）。数据和脚本都在仓库里，可完整复现。
+
+## 1. 数据来源
+
+我们直接启动开源 MCP Server，通过 MCP 协议的 `tools/list` 拿到每个工具**实际下发给大模型**的 `inputSchema`（不是手抄、不是从源码猜），存到 `cases/mcp-servers/<server>/<tool>.json`。
+
+| server | 包 / 版本 | 上游仓库 | 工具数 |
+| --- | --- | --- | --- |
+| filesystem | `@modelcontextprotocol/server-filesystem` 1.0.0 | github.com/modelcontextprotocol/servers | 14 |
+| memory | `@modelcontextprotocol/server-memory` 1.0.0 | 同上 | 9 |
+| everything | `@modelcontextprotocol/server-everything` 1.0.0 | 同上 | 13 |
+| sequential-thinking | `@modelcontextprotocol/server-sequential-thinking` 1.0.0 | 同上 | 1 |
+| fetch | `mcp-server-fetch` 2026.10.10（PyPI） | 同上 | 1 |
+| git | `mcp-server-git` 2026.10.10（PyPI） | 同上 | 12 |
+| time | `mcp-server-time` 2026.10.10（PyPI） | 同上 | 2 |
+| playwright | `@playwright/mcp` 0.0.83 | github.com/microsoft/playwright-mcp | 25 |
+
+复现：
+
+```bash
+python3 scripts/dump_mcp_schemas.py filesystem npx -y @modelcontextprotocol/server-filesystem /tmp/x
+moon build --target native
+python3 scripts/run_cases.py      # 生成 cases/results.json 和下面的表格
+```
+
+## 2. 总体结果
+
+"有 error" 指把该 schema 原样发给对应平台的 strict / 结构化模式时，**按官方文档会被拒绝或不受支持**（依据见 [PROFILES.md](PROFILES.md)）。
+
+| profile | 有 error 的 schema | --fix 后仍有 error | warning 总数（前→后） |
+| --- | --- | --- | --- |
+| generic | 0/77 | 0/77 | 152 → 9 |
+| deepseek | 72/77 | 1/77 | 197 → 52 |
+| kimi | 14/77 | 0/77 | 197 → 32 |
+| qwen | 1/77 | 0/77 | 197 → 54 |
+| glm | 0/77 | 0/77 | 197 → 54 |
+
+按 server 统计（原样 schema 中有 error 的工具数）：
+
+| server | tools | generic | deepseek | kimi | qwen | glm |
+| --- | --- | --- | --- | --- | --- | --- |
+| everything | 13 | 0 | 13 | 1 | 0 | 0 |
+| fetch | 1 | 0 | 1 | 1 | 0 | 0 |
+| filesystem | 14 | 0 | 14 | 0 | 0 | 0 |
+| git | 12 | 0 | 12 | 12 | 0 | 0 |
+| memory | 9 | 0 | 9 | 0 | 0 | 0 |
+| playwright | 25 | 0 | 20 | 0 | 1 | 0 |
+| sequential-thinking | 1 | 0 | 1 | 0 | 0 | 0 |
+| time | 2 | 0 | 2 | 0 | 0 | 0 |
+
+## 3. 关键发现
+
+1. **同一份工具定义，在 DeepSeek strict 模式下 77 个里有 72 个过不了。**
+   最主要的原因是 MCP 工具普遍有可选参数（144 处 ASL102：属性不在 required 里 / 没有 `additionalProperties: false`）。这在 OpenAI 非 strict 模式下没问题，但一旦开启 DeepSeek 的 `strict: true`，服务端会直接报错。
+2. **Python 生态（Pydantic 生成）的工具全军覆没在 Kimi 上。**
+   `mcp-server-git` / `mcp-server-fetch` 的 schema 每一层都带 `title`（共 45 处），Kimi 的 MFJS 规范明确不支持 `title`；它们还用 `anyOf: [{type: string}, {type: null}]` 表示可选参数，DeepSeek strict 不支持 `null` 类型（13 处）。
+   例：`git_branch` 的 `contains` 参数——`{"anyOf":[{"type":"string"},{"type":"null"}],"default":null,"title":"Contains"}`。
+3. **常见的长度 / 格式约束会被国产平台拒绝。**
+   `fetch` 的 `url` 带 `minLength: 1` 和 `format: "uri"`；`read_multiple_files` 的 `paths` 带 `minItems: 1`。DeepSeek strict 不支持 `minLength/minItems`，`format` 只支持 email/hostname/ipv4/ipv6/uuid。
+4. **通义千问踩中 1 处 400：** Playwright 的 `browser_drop.data` 用了 `propertyNames`，百炼文档列为"不支持，返回 400"。
+5. **45 个参数没有 description（ASL010）**，集中在 filesystem（18）和 git（20）。模型只能靠参数名猜含义，这是"填错参数"的常见来源，也是 `--ai` 要解决的部分。
+6. **8 个无参数工具** 的 `properties` 为空。工具调用里这是合法写法，所以 v0.2 起 ASL004 对根级空 properties 只给 warning（初版误报为 error，这个案例让我们修正了规则）。
+
+## 4. 自动修复效果（`--fix`，离线、确定性）
+
+- DeepSeek：有 error 的 schema 从 **72 → 1**。修复方式：补 `additionalProperties: false`、全部参数加入 required、去掉 null 分支、类型数组改 anyOf、把 `minLength`/`format` 等写进 description。
+  唯一剩下的是 Playwright `browser_drop.data`——它本质上是"MIME 类型 → 字符串"的字典，strict 模式下没有等价表达，需要人或 AI 改结构（例如改成 `[{mime, value}]` 数组）。这正是 `--ai` 的用武之地。
+- Kimi：**14 → 0**（`title` 合并进 description，`format` 写进 description）。
+- 通义千问：**1 → 0**。
+- 修复是幂等的，且每一步都打印改动日志，方便代码审查。
+
+## 5. AI 修复的定位
+
+确定性规则只做"不改变语义"的安全修复。剩下两类问题交给 `--ai`（任意 OpenAI 兼容模型，默认 DeepSeek）：
+
+- 45 个缺失的参数说明（ASL010）：需要读懂工具用途才能写好；
+- 需要改结构的 schema（如上面的字典参数）。
+
+AI 的输出会被重新 lint，**只在问题严格减少时才采用**，否则保留离线结果。详见 [FIX.md](FIX.md)。
+
+## 6. 局限
+
+- 规则依据的是各平台 2026-10-14 的公开文档；GLM 未公开 strict 子集，因此只给 warning。
+- 本报告没有对每个平台做真实 API 调用验证（需要各平台密钥），结论是"按官方文档会被拒绝"。用真实请求回归验证列入 [ROADMAP](../ROADMAP.md)。
+- 上游 schema 版权归原项目所有，此处仅作为测试数据引用。

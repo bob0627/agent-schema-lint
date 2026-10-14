@@ -81,7 +81,7 @@ fn walk_schema(
   is_root? : Bool = false,
 ) -> Unit {
   check_missing_type(node, path, diags, is_root~)
-  check_empty_properties(node, path, diags)
+  check_empty_properties(node, path, diags, is_root~)
   check_empty_enum(node, path, diags)
   check_additional_properties(node, path, diags)
   check_required_unknown(node, path, diags)
@@ -194,10 +194,20 @@ fn check_empty_properties(
   node : Map[String, Json],
   path : String,
   diags : Array[Diagnostic],
+  is_root~ : Bool,
 ) -> Unit {
   match node.get("properties") {
     Some(Object(props)) =>
-      if props.is_empty() {
+      if props.is_empty() && is_root {
+        // A tool that takes no arguments: valid for function calling, but
+        // some structured-output providers reject an empty root object.
+        diags.push({
+          path: "\{path}.properties",
+          code: "ASL004",
+          message: "empty root properties (no-argument tool); fine for tool calling, but not usable as a structured-output schema",
+          severity: Warning,
+        })
+      } else if props.is_empty() {
         diags.push({
           path: "\{path}.properties",
           code: "ASL004",

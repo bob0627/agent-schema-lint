@@ -1,0 +1,22 @@
+{
+  "properties": {
+    "repo_path": {
+      "title": "Repo Path",
+      "type": "string"
+    },
+    "files": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Files",
+      "type": "array"
+    }
+  },
+  "required": [
+    "repo_path",
+    "files"
+  ],
+  "title": "GitAdd",
+  "type": "object"
+}

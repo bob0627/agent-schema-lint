@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "colorScheme": {
+      "description": "Emulates the prefers-color-scheme media feature",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "light",
+            "dark"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reducedMotion": {
+      "description": "Emulates the prefers-reduced-motion media feature",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "reduce",
+            "no-preference"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "forcedColors": {
+      "description": "Emulates the forced-colors media feature",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "active",
+            "none"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "contrast": {
+      "description": "Emulates the prefers-contrast media feature",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "more",
+            "no-preference"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "media": {
+      "description": "Changes the CSS media type of the page",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "screen",
+            "print"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

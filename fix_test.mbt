@@ -89,3 +89,14 @@ test "ai result accepted only when strictly better" {
   assert_false(@agent-schema-lint.ai_fix_is_better([w], [w]))
   assert_false(@agent-schema-lint.ai_fix_is_better([w], [e]))
 }
+
+///|
+test "deepseek fix drops pydantic null branch" {
+  let text =
+    #|{"type":"object","properties":{"c":{"anyOf":[{"type":"string"},{"type":"null"}],"default":null,"title":"C"}},"required":[]}
+  guard @agent-schema-lint.fix_schema(text, DeepSeek) is Some(r) else {
+    fail("fix")
+  }
+  assert_eq(@agent-schema-lint.lint_with_profile(r.fixed, DeepSeek).length(), 0)
+  assert_false(r.fixed.contains("null"))
+}

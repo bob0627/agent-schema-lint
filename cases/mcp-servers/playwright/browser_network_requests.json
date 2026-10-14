@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "static": {
+      "default": false,
+      "description": "Whether to include successful static resources like images, fonts, scripts, etc. Defaults to false.",
+      "type": "boolean"
+    },
+    "filter": {
+      "description": "Only return requests whose URL matches this regexp (e.g. \"/api/.*user\").",
+      "type": "string"
+    },
+    "filename": {
+      "description": "File name to save the network requests to. Relative file names are resolved against the workspace root. If not provided, requests are returned as text.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "static"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "repo_path": {
+      "title": "Repo Path",
+      "type": "string"
+    },
+    "branch_name": {
+      "title": "Branch Name",
+      "type": "string"
+    },
+    "base_branch": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Base Branch"
+    }
+  },
+  "required": [
+    "repo_path",
+    "branch_name"
+  ],
+  "title": "GitCreateBranch",
+  "type": "object"
+}

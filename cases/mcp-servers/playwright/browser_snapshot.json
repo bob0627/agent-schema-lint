@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "target": {
+      "description": "Exact target element reference from the page snapshot, or a unique element selector",
+      "type": "string"
+    },
+    "filename": {
+      "description": "Save snapshot to a file instead of returning it in the response. Relative file names are resolved against the workspace root.",
+      "type": "string"
+    },
+    "depth": {
+      "description": "Limit the depth of the snapshot tree",
+      "type": "number"
+    },
+    "boxes": {
+      "description": "Include each element's bounding box as [box=x,y,width,height] in the snapshot. Coordinates are viewport-relative, in CSS pixels (Element.getBoundingClientRect)",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}
