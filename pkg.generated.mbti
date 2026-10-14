@@ -10,6 +10,8 @@ pub fn has_errors(ArrayView[Diagnostic]) -> Bool
 
 pub fn lint(StringView) -> Array[Diagnostic]
 
+pub fn lint_with_profile(StringView, Profile) -> Array[Diagnostic]
+
 // Errors
 
 // Types and methods
@@ -24,6 +26,18 @@ pub fn Diagnostic::format(Self) -> String
 pub fn Diagnostic::not_equal(Self, Self) -> Bool
 pub fn Diagnostic::to_json(Self) -> Json
 pub impl ToJson for Diagnostic
+
+pub(all) enum Profile {
+  Generic
+  DeepSeek
+  Kimi
+  Qwen
+  Glm
+} derive(Eq)
+pub fn Profile::equal(Self, Self) -> Bool
+pub fn Profile::name(Self) -> String
+pub fn Profile::not_equal(Self, Self) -> Bool
+pub fn Profile::parse(String) -> Self?
 
 pub(all) enum Severity {
   Error

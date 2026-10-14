@@ -23,6 +23,12 @@ fn cli() -> @argparse.Command {
         about="Output format: text or json",
         default_values=["text"],
       ),
+      @argparse.OptionArg(
+        "profile",
+        long="profile",
+        about="Provider profile: generic, deepseek, kimi, qwen, glm",
+        default_values=["generic"],
+      ),
     ],
     positionals=[
       @argparse.PositionArg(
@@ -64,6 +70,16 @@ async fn main {
     fail_usage("unknown --format \"\{format}\" (expected text or json)")
     return
   }
+  let profile_name = match matches.values {
+    { "profile": [p], .. } => p
+    _ => "generic"
+  }
+  guard @lib.Profile::parse(profile_name) is Some(profile) else {
+    fail_usage(
+      "unknown --profile \"\{profile_name}\" (expected generic, deepseek, kimi, qwen or glm)",
+    )
+    return
+  }
   let text = @fs.read_file(file).text() catch {
     err => {
       @stdio.stderr.write("error: cannot read \{file}: \{err}\n")
@@ -71,7 +87,7 @@ async fn main {
       return
     }
   }
-  let diags = @lib.lint(text)
+  let diags = @lib.lint_with_profile(text, profile)
   let failed = @lib.has_errors(diags)
   if format == "json" {
     out(@lib.diagnostics_to_json(diags))
