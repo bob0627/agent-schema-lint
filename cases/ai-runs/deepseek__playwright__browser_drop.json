@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "element": {
+      "description": "Human-readable element description used to obtain permission to interact with the element",
+      "type": "string"
+    },
+    "target": {
+      "type": "string",
+      "description": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    "paths": {
+      "description": "Absolute paths to files to drop onto the element.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "data": {
+      "description": "Data to drop, expressed as an array of entries because dynamic-key maps are not supported in strict mode. Each entry contains a MIME type in key and its payload string in value. Example: [{\"key\": \"text/plain\", \"value\": \"hello\"}, {\"key\": \"text/uri-list\", \"value\": \"https://example.com\"}].",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "description": "MIME type key, for example text/plain or text/uri-list",
+            "type": "string"
+          },
+          "value": {
+            "description": "Payload string associated with the MIME type key, for example hello or https://example.com",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "target",
+    "element",
+    "paths",
+    "data"
+  ],
+  "additionalProperties": false
+}

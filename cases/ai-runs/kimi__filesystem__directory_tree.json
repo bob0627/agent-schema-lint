@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "要操作的文件或目录路径，建议使用绝对路径，例如 \"/data/logs\" 或 \"./config/app.yaml\"。"
+    },
+    "excludePatterns": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "一个匹配字符串，支持常见通配符语法；例如 \"*.log\" 会排除所有 .log 结尾的文件，\"node_modules/**\" 会排除 node_modules 目录及其内容。"
+      },
+      "description": "需要排除的文件名或路径模式列表；未提供时默认为空数组，表示不排除任何条目。例如 [\"*.tmp\", \"node_modules/**\"]。"
+    }
+  },
+  "required": [
+    "path",
+    "excludePatterns"
+  ],
+  "additionalProperties": false
+}
