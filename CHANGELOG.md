@@ -1,5 +1,12 @@
 # 更新日志
 
+## v0.2.1 — 2026-10-14
+
+### 修复
+- AI 客户端兼容推理模型：不再发送 `temperature`（kimi-for-coding 只接受默认值），忽略 `reasoning_content`；非 200 时打印错误信息
+- AI 护栏：改写结果不得引入新的错误类型；提示词要求把字典改写为键值对数组
+- 用真实 Kimi Code 接口验证 AI 修复，结果见 docs/CASES.md 5.1 和 cases/ai-runs/
+
 ## v0.2.0 — 2026-10-14
 
 ### 新增

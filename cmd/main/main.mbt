@@ -15,7 +15,7 @@ fn cli() -> @argparse.Command {
   @argparse.Command(
     "agent-schema-lint",
     about="Lint JSON Schema documents for LLM / Agent structured-output subsets",
-    version="0.2.0",
+    version="0.2.1",
     flags=[
       @argparse.FlagArg(
         "fix",
@@ -248,7 +248,12 @@ async fn ai_call(base : String, key : String, body : String) -> String? {
   }
   let raw = data.text() catch { _ => "" }
   if r.code != 200 {
-    log("  AI 返回 HTTP \{r.code}（保留确定性结果）")
+    let detail = if raw.length() > 300 {
+      raw.view(end_offset=300).to_owned() + "..."
+    } else {
+      raw
+    }
+    log("  AI 返回 HTTP \{r.code}（保留确定性结果）: \{detail}")
     return None
   }
   Some(raw)

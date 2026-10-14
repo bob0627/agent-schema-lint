@@ -100,3 +100,41 @@ test "deepseek fix drops pydantic null branch" {
   assert_eq(@agent-schema-lint.lint_with_profile(r.fixed, DeepSeek).length(), 0)
   assert_false(r.fixed.contains("null"))
 }
+
+///|
+test "ai request omits temperature for reasoning models" {
+  let body = @agent-schema-lint.ai_fix_request(
+    "{}",
+    [],
+    Kimi,
+    "kimi-for-coding",
+  ).stringify()
+  assert_false(body.contains("temperature"))
+}
+
+///|
+test "ai_fix_extract ignores reasoning_content and empty content" {
+  let resp =
+    #|{"choices":[{"message":{"role":"assistant","reasoning_content":"thinking {\"type\":\"object\"}","content":""}}]}
+  assert_eq(@agent-schema-lint.ai_fix_extract(resp), None)
+  let resp2 =
+    #|{"choices":[{"message":{"role":"assistant","reasoning_content":"...","content":"{\"type\":\"object\"}"}}]}
+  assert_true(@agent-schema-lint.ai_fix_extract(resp2) is Some(_))
+}
+
+///|
+test "ai result rejected when it introduces a new error kind" {
+  let w : @agent-schema-lint.Diagnostic = {
+    path: "$",
+    code: "ASL006",
+    message: "m",
+    severity: Warning,
+  }
+  let e102 : @agent-schema-lint.Diagnostic = {
+    ..w,
+    code: "ASL102",
+    severity: Error,
+  }
+  let e004 : @agent-schema-lint.Diagnostic = { ..e102, code: "ASL004", }
+  assert_false(@agent-schema-lint.ai_fix_is_better([e102, w], [e004]))
+}

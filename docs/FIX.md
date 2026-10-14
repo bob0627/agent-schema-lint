@@ -40,6 +40,7 @@ moon run cmd/main -- --fix --ai --profile deepseek tool.json
 | 平台 | ASL_AI_BASE_URL | ASL_AI_MODEL 示例 |
 | --- | --- | --- |
 | DeepSeek | `https://api.deepseek.com` | `deepseek-flash` |
+| Kimi Code（已实测） | `https://api.kimi.com/coding/v1` | `kimi-for-coding` |
 | Kimi | `https://api.moonshot.cn/v1` | 以平台控制台为准 |
 | 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | 如 `qwen-plus` |
 | 智谱 GLM | `https://open.bigmodel.cn/api/paas/v4` | 如 `glm-4.5` 等 |
@@ -48,6 +49,8 @@ moon run cmd/main -- --fix --ai --profile deepseek tool.json
 
 - 提示词要求模型**只输出 JSON**、不得改字段名和类型含义；回答若带 ```json 代码块会自动剥离。
 - 模型回答会被**重新 lint**。只有 error 和 warning 都不增加、且至少减少一个时才采用，否则丢弃并保留确定性结果。
+- 不发送 `temperature`（推理模型如 `kimi-for-coding` 只接受默认值）；只读取 `content`，忽略 `reasoning_content`。
+- AI 结果不能引入原来没有的错误类型（防止模型把字段"掏空"来躲规则）。
 - 没有密钥、网络失败、HTTP 非 200、回答不是合法 JSON 时，都会退回离线结果，命令不会因此失败。
 
 ## 3. 无密钥演示

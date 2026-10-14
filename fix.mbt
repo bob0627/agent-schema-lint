@@ -148,7 +148,8 @@ fn move_to_description(
 ///|
 /// Build an OpenAI-compatible `/chat/completions` request body asking the
 /// model to rewrite `schema` so that `diags` disappear for `profile`.
-/// The model may only return JSON; the caller re-lints and keeps the old
+/// No `temperature` is sent: reasoning models (e.g. kimi-for-coding)
+/// reject anything but their default. The model may only return JSON; the caller re-lints and keeps the old
 /// schema if the answer is not strictly better.
 pub fn ai_fix_request(
   schema : String,
@@ -168,10 +169,11 @@ pub fn ai_fix_request(
     #|3. 为缺少 description 的字段补写简洁、准确的中文 description（说明含义、格式、示例）。
     #|4. 目标平台不支持的关键字，删除并把约束写进 description。
     #|5. 每个 object 都要 additionalProperties: false，且全部属性列入 required。
+    #|6. 动态键的字典（additionalProperties 为 schema）在 strict 模式下无法表达时，改写成
+    #|   由 {"key": ..., "value": ...} 对象组成的数组，并在 description 中说明；不要把它改成空 object。
   let user = "目标平台 profile: \{profile.name()}\n\nlint 发现的问题:\n\{findings.to_string()}\n待修复 schema:\n\{schema}"
   {
     "model": model.to_json(),
-    "temperature": (0.0 : Double).to_json(),
     "response_format": { "type": "json_object" },
     "messages": [
       { "role": "system", "content": system.to_json() },
@@ -220,13 +222,27 @@ pub fn count_findings(diags : ArrayView[Diagnostic]) -> (Int, Int) {
 
 ///|
 /// Accept an AI rewrite only if it has no more errors and no more
-/// warnings than the deterministic result.
+/// warnings than the deterministic result, is strictly better, and adds no
+/// new kind of error.
 pub fn ai_fix_is_better(
   before : ArrayView[Diagnostic],
   after : ArrayView[Diagnostic],
 ) -> Bool {
   let (be, bw) = count_findings(before)
   let (ae, aw) = count_findings(after)
+  // The rewrite must not introduce a kind of error that was not there
+  // before (e.g. emptying an object to dodge a strict-mode rule).
+  let old_codes : Map[String, Bool] = Map([])
+  for d in before {
+    if d.severity == Error {
+      old_codes.set(d.code, true)
+    }
+  }
+  for d in after {
+    if d.severity == Error && !old_codes.contains(d.code) {
+      return false
+    }
+  }
   ae <= be && aw <= bw && (ae < be || aw < bw)
 }
 

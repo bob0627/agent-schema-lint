@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "要编辑的文件路径，可为相对或绝对路径，例如 src/main.ts"
+    },
+    "edits": {
+      "type": "array",
+      "description": "按顺序依次应用的替换编辑列表；每项必须包含 oldText（需精确匹配的原文）和 newText（替换后的文本）",
+      "items": {
+        "type": "object",
+        "properties": {
+          "oldText": {
+            "type": "string",
+            "description": "Text to search for - must match exactly"
+          },
+          "newText": {
+            "type": "string",
+            "description": "Text to replace with"
+          }
+        },
+        "required": [
+          "oldText",
+          "newText"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "dryRun": {
+      "default": false,
+      "description": "Preview changes using git-style diff format",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "path",
+    "edits",
+    "dryRun"
+  ],
+  "additionalProperties": false
+}

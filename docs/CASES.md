@@ -80,8 +80,38 @@ python3 scripts/run_cases.py      # 生成 cases/results.json 和下面的表格
 
 AI 的输出会被重新 lint，**只在问题严格减少时才采用**，否则保留离线结果。详见 [FIX.md](FIX.md)。
 
+## 5.1 真实 AI 修复运行（Kimi Code，2026-10-14）
+
+配置（不含密钥）：
+
+```bash
+export ASL_AI_API_KEY=...                                # Kimi Code 密钥
+export ASL_AI_BASE_URL=https://api.kimi.com/coding/v1
+export ASL_AI_MODEL=kimi-for-coding                       # 推理模型，仅思考模式
+agent-schema-lint --fix --ai --profile deepseek cases/mcp-servers/playwright/browser_drop.json
+```
+
+| schema | profile | 原样 | `--fix` 后 | `--ai` 后 | 耗时 |
+| --- | --- | --- | --- | --- | --- |
+| playwright/browser_drop | deepseek | 4 error / 4 warning | 1 error / 1 warning | **0 / 0（已采用）** | 16 s |
+| filesystem/edit_file | deepseek | 3 error / 5 warning | 0 / 2 | **0 / 0（已采用）** | 14 s |
+| git/git_log | deepseek | 6 error / 6 warning | 0 / 2 | **0 / 0（已采用）** | 10 s |
+| filesystem/directory_tree | kimi | 0 error / 4 warning | 0 / 2 | **0 / 0（已采用）** | 16 s |
+| git/git_log | kimi | 5 error / 6 warning | 0 / 0 | 无需调用 AI | 0 s |
+| sequential-thinking | deepseek | 9 error / 6 warning | 0 / 0 | 无需调用 AI | 0 s |
+
+AI 改写结果保存在 `cases/ai-runs/`。4 个被采用的结果都保留了原有的全部参数名。
+
+**亮点：唯一修不了的 browser_drop。** 它的 `data` 参数是"MIME 类型 → 字符串"的字典，DeepSeek strict 模式无法表达。模型把它改写成了 `[{"key": "text/plain", "value": "hello"}]` 形式的数组，并为每个字段写了说明。这是确定性规则做不到的结构性修复。注意，这会改变工具的调用格式，服务端需要配合调整，所以应当人工审核后再采用。
+
+**真实运行发现并修复的问题（PR #19）：**
+1. `kimi-for-coding` 只接受默认 temperature（发送 `temperature: 0` 会返回 400）。现在请求里不再发送 temperature。
+2. 推理模型会返回 `reasoning_content`。工具只读取 `content`，有测试覆盖。
+3. **护栏漏洞。** 第一次运行时，模型把 `data` 改成了空 object（`properties: {}`）来"躲过"规则。error 数没变，warning 减少了，于是被旧护栏采用了。现在新增一条护栏：AI 结果不能出现原来没有的错误类型。同时在提示词里要求把字典改成键值对数组。重跑后得到了上面的正确结果。
+4. 非 200 响应现在会打印截断后的错误信息，方便排查。
+
 ## 6. 局限
 
 - 规则依据的是各平台 2026-10-14 的公开文档；GLM 未公开 strict 子集，因此只给 warning。
-- 本报告没有对每个平台做真实 API 调用验证（需要各平台密钥），结论是"按官方文档会被拒绝"。用真实请求回归验证列入 [ROADMAP](../ROADMAP.md)。
+- 体检结论是"按官方文档会被拒绝"，没有把 77 个 schema 逐一发给各平台做真实请求验证（列入 [ROADMAP](../ROADMAP.md)）。AI 修复已用真实的 Kimi Code 接口跑过（见 5.1）。
 - 上游 schema 版权归原项目所有，此处仅作为测试数据引用。
