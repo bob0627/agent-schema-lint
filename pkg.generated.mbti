@@ -2,7 +2,17 @@
 package "bob/agent-schema-lint"
 
 // Values
+pub fn ai_fix_extract(StringView) -> String?
+
+pub fn ai_fix_is_better(ArrayView[Diagnostic], ArrayView[Diagnostic]) -> Bool
+
+pub fn ai_fix_request(String, ArrayView[Diagnostic], Profile, String) -> Json
+
+pub fn count_findings(ArrayView[Diagnostic]) -> (Int, Int)
+
 pub fn diagnostics_to_json(ArrayView[Diagnostic]) -> String
+
+pub fn fix_schema(StringView, Profile) -> FixResult?
 
 pub fn format_diagnostics(ArrayView[Diagnostic]) -> String
 
@@ -26,6 +36,11 @@ pub fn Diagnostic::format(Self) -> String
 pub fn Diagnostic::not_equal(Self, Self) -> Bool
 pub fn Diagnostic::to_json(Self) -> Json
 pub impl ToJson for Diagnostic
+
+pub(all) struct FixResult {
+  fixed : String
+  changes : Array[String]
+}
 
 pub(all) enum Profile {
   Generic
